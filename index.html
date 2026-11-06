@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6658a6">
+  <title>Math Score Scanner | เครื่องสแกน QR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root{--purple:#6658a6;--purple2:#51458f;--ink:#2d2a42;--muted:#77748b;--line:#e9e6f1;--bg:#f7f6fb;--green:#287a54;--red:#a13b55}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Prompt,Tahoma,sans-serif}
+    .wrap{max-width:620px;margin:0 auto;padding:18px 14px 38px}.hero{background:linear-gradient(120deg,#51458f,#8174c3 68%,#a18ac5);border-radius:24px;padding:22px;color:white;box-shadow:0 10px 28px #30265a12}
+    h1{font-size:23px;margin:0 0 6px}.hero p{margin:0;color:#f0edff;font-size:13px;line-height:1.7}.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 8px 24px #30265a0c}
+    h2{font-size:17px;margin:0 0 6px}.muted{font-size:13px;line-height:1.7;color:var(--muted)}#reader{width:100%;max-width:520px;margin:14px auto 8px;overflow:hidden;border-radius:14px;background:#171523;min-height:220px}#reader video{object-fit:cover}
+    .btn{border:0;border-radius:12px;padding:13px 16px;min-height:48px;font:500 15px Prompt,Tahoma,sans-serif;width:100%;cursor:pointer}.primary{background:var(--purple);color:white}.stop{background:#fff0f2;color:var(--red);margin-top:9px}
+    .status{padding:12px 14px;background:#f4f1ff;color:#5a508e;border-radius:12px;margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.status.ok{background:#eaf8f2;color:var(--green)}.status.error{background:#fff0f2;color:var(--red)}
+    .frame{width:72%;max-width:280px;aspect-ratio:1;border:2px dashed #a89fd2;border-radius:18px;margin:12px auto 4px;display:grid;place-items:center;color:#8982aa;font-size:13px;text-align:center;padding:18px;pointer-events:none}
+    .actions{display:grid;gap:9px}.small{font-size:11px;color:#908ba1;line-height:1.7;margin-top:12px}.backlink{display:none;margin-top:12px;text-align:center}.backlink a{color:var(--purple);font-weight:500}
+    @media(min-width:520px){.wrap{padding-top:28px}.hero{padding:28px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero"><h1>Math Score Scanner</h1><p>เครื่องสแกน QR นักเรียนแบบเรียลไทม์<br>เมื่ออ่านรหัสได้ ระบบจะส่งกลับไปยังหน้าบันทึกคะแนน</p></header>
+    <section class="card">
+      <h2>สแกนบัตรประจำตัวนักเรียน</h2>
+      <p class="muted">กดปุ่มเริ่มใช้งาน แล้วอนุญาตให้เว็บไซต์ใช้กล้อง เล็งกล้องหลังไปที่ QR Code ให้อยู่ในกรอบ</p>
+      <div class="frame">วาง QR Code ให้อยู่บริเวณกรอบนี้<br>ระบบจะอ่านรหัสโดยอัตโนมัติ</div>
+      <div id="reader"></div>
+      <div class="actions">
+        <button id="startBtn" class="btn primary" type="button">เปิดกล้องหลังและเริ่มสแกน</button>
+        <button id="stopBtn" class="btn stop" type="button" disabled>หยุดกล้อง</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite">พร้อมเริ่มสแกน — โปรดกดปุ่มเปิดกล้อง</div>
+      <div id="fallback" class="backlink"><a id="returnLink" href="#">กลับไปยังระบบบันทึกคะแนน</a></div>
+      <p class="small">หน้านี้ใช้กล้องและอ่าน QR ภายในเบราว์เซอร์เท่านั้น ไม่เก็บภาพหรือรายชื่อนักเรียนไว้บนเว็บไซต์นี้</p>
+    </section>
+  </main>
+  <script>
+    (function(){
+      'use strict';
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get('returnUrl') || '';
+      let targetOrigin = params.get('targetOrigin') || '*';
+      const nonce = params.get('nonce') || '';
+      try { if (targetOrigin !== '*' && new URL(targetOrigin).protocol !== 'https:') targetOrigin = '*'; } catch (e) { targetOrigin = '*'; }
+      const statusEl = document.getElementById('status');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const fallback = document.getElementById('fallback');
+      const returnLink = document.getElementById('returnLink');
+      let scanner = null;
+      let started = false;
+      let completed = false;
+      let awaitingAck = false;
+      let fallbackTimer = null;
+
+      function status(message, kind){
+        statusEl.textContent = message;
+        statusEl.className = 'status' + (kind ? ' ' + kind : '');
+      }
+
+      function buildReturnUrl(code){
+        if(!returnUrl) return '';
+        try{
+          const url = new URL(returnUrl);
+          if(url.protocol !== 'https:' || url.hostname !== 'script.google.com') return '';
+          url.searchParams.set('scan', code);
+          return url.toString();
+        }catch(e){return '';}
+      }
+
+      async function finishScan(decodedText){
+        if(completed) return;
+        completed = true;
+        const code = String(decodedText || '').trim();
+        if(!code){completed=false;return;}
+        status('อ่านรหัสได้แล้ว กำลังส่งกลับไปยังระบบคะแนน...', 'ok');
+        startBtn.disabled = true;
+        try{if(scanner && started){await scanner.stop();started=false;}}catch(e){}
+        stopBtn.disabled = true;
+        const payload = {type:'MATH_SCORE_QR_SCAN', code:code, nonce:nonce};
+        let sentToOpener = false;
+        try{
+          if(window.opener && !window.opener.closed){
+            window.opener.postMessage(payload, targetOrigin);
+            sentToOpener = true;
+            awaitingAck = true;
+          }
+        }catch(e){sentToOpener = false;}
+
+        const fallbackUrl = buildReturnUrl(code);
+        if(fallbackUrl){
+          returnLink.href = fallbackUrl;
+          fallback.style.display = 'block';
+        }
+        if(sentToOpener){
+          status('กำลังยืนยันการส่งรหัสไปยังหน้าบันทึกคะแนน...', 'ok');
+          fallbackTimer = setTimeout(function(){
+            if(awaitingAck && fallbackUrl){
+              status('ยังไม่ได้รับการยืนยัน กำลังเปิดระบบคะแนนพร้อมรหัสที่สแกนได้...', 'ok');
+              window.location.replace(fallbackUrl);
+            }else if(awaitingAck){
+              status('ส่งรหัสแล้ว แต่ไม่พบการยืนยันจากหน้าหลัก โปรดกลับไปยังแท็บเดิม', 'error');
+              startBtn.disabled = false;
+            }
+          }, 1800);
+        }else if(fallbackUrl){
+          status('อ่านรหัสสำเร็จ กำลังกลับไปยังระบบบันทึกคะแนน...', 'ok');
+          setTimeout(function(){window.location.replace(fallbackUrl);}, 700);
+        }else{
+          status('อ่านรหัสได้: ' + code + ' — ไม่พบหน้าต่างต้นทาง โปรดกลับไปกรอกรหัสในระบบ', 'ok');
+          startBtn.textContent = 'สแกนคนถัดไป';
+          startBtn.disabled = false;
+          completed = false;
+        }
+      }
+
+      async function startCamera(){
+        if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+          status('เบราว์เซอร์นี้ไม่อนุญาตให้ใช้กล้อง โปรดเปิดหน้าเว็บผ่าน HTTPS ใน Safari หรือ Chrome', 'error');
+          return;
+        }
+        if(!window.Html5Qrcode){
+          status('โหลดตัวอ่าน QR ไม่สำเร็จ โปรดตรวจสอบอินเทอร์เน็ตแล้วโหลดหน้าใหม่', 'error');
+          return;
+        }
+        startBtn.disabled = true;
+        status('กำลังขอสิทธิ์ใช้กล้องหลัง...', '');
+        try{
+          const formats = [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E
+          ].filter(function(value){ return value !== undefined; });
+          scanner = new Html5Qrcode('reader', {formatsToSupport:formats, verbose:false});
+          const config = {
+            fps: 12,
+            qrbox: function(viewWidth, viewHeight){
+              const size = Math.max(180, Math.floor(Math.min(viewWidth, viewHeight) * 0.72));
+              return {width:Math.min(size, viewWidth), height:Math.min(size, viewHeight)};
+            },
+            aspectRatio: 1.0,
+            disableFlip: false
+          };
+          await scanner.start({facingMode:'environment'}, config, function(decodedText){finishScan(decodedText);}, function(){ });
+          started = true;
+          stopBtn.disabled = false;
+          status('กล้องพร้อมแล้ว — เล็ง QR Code ของนักเรียนให้อยู่ในกรอบ', 'ok');
+        }catch(error){
+          started = false;
+          scanner = null;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          const message = error && error.message ? error.message : String(error);
+          status('เปิดกล้องไม่สำเร็จ: ' + message + ' โปรดอนุญาต Camera ให้เว็บไซต์นี้ในการตั้งค่าเบราว์เซอร์', 'error');
+        }
+      }
+
+      async function stopCamera(){
+        if(scanner && started){
+          try{await scanner.stop();}catch(e){}
+          try{await scanner.clear();}catch(e){}
+        }
+        scanner = null;
+        started = false;
+        completed = false;
+        startBtn.disabled = false;
+        startBtn.textContent = 'เปิดกล้องหลังและเริ่มสแกน';
+        stopBtn.disabled = true;
+        status('หยุดกล้องแล้ว กดเริ่มสแกนเมื่อต้องการใช้งานต่อ', '');
+      }
+
+      window.addEventListener('message', function(event){
+        if(event.source !== window.opener) return;
+        if(targetOrigin !== '*' && event.origin !== targetOrigin) return;
+        const data = event.data || {};
+        if(data.type !== 'MATH_SCORE_QR_ACK' || data.nonce !== nonce) return;
+        awaitingAck = false;
+        if(fallbackTimer) clearTimeout(fallbackTimer);
+        status('ส่งรหัสกลับไปยังหน้าบันทึกคะแนนแล้ว สามารถกลับไปยังแท็บเดิมได้', 'ok');
+        setTimeout(function(){try{window.close();}catch(e){}}, 1000);
+      });
+
+      startBtn.addEventListener('click', startCamera);
+      stopBtn.addEventListener('click', stopCamera);
+      window.addEventListener('pagehide', function(){
+        if(scanner && started){try{scanner.stop();}catch(e){}}
+      });
+      if(!returnUrl || !nonce){
+        status('หน้านี้ต้องเปิดจากปุ่ม “เปิดกล้องสแกนสด” ในระบบ Math Score Scanner เพื่อเชื่อมผลกลับไปยังบัญชีคะแนน', 'error');
+        startBtn.disabled = true;
+      }
+    })();
+  </script>
+</body>
+</html>
