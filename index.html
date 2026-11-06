@@ -85,7 +85,7 @@
         const payload = {type:'MATH_SCORE_QR_SCAN', code:code, nonce:nonce};
         let sentToOpener = false;
         try{
-          if(window.opener && !window.opener.closed){
+          if(window.opener && !window.opener.closed && returnUrl && nonce){
             window.opener.postMessage(payload, targetOrigin);
             sentToOpener = true;
             awaitingAck = true;
@@ -195,8 +195,7 @@
         if(scanner && started){try{scanner.stop();}catch(e){}}
       });
       if(!returnUrl || !nonce){
-        status('หน้านี้ต้องเปิดจากปุ่ม “เปิดกล้องสแกนสด” ในระบบ Math Score Scanner เพื่อเชื่อมผลกลับไปยังบัญชีคะแนน', 'error');
-        startBtn.disabled = true;
+        status('โหมดทดสอบกล้อง: สามารถเปิดหน้านี้โดยตรงเพื่อทดสอบกล้องได้ เมื่อสแกนสำเร็จจะแสดงรหัสบนหน้าจอ หากต้องการส่งรหัสไปบันทึกคะแนน ให้เปิดหน้านี้จากปุ่ม “เปิดกล้องสแกนสด” ในระบบหลัก', '');
       }
     })();
   </script>
