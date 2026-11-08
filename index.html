@@ -46,6 +46,7 @@
       const returnUrl = params.get('returnUrl') || '';
       let targetOrigin = params.get('targetOrigin') || '*';
       const nonce = params.get('nonce') || '';
+      const returnPage = params.get('page') === 'reports' ? 'reports' : 'scores';
       try { if (targetOrigin !== '*' && new URL(targetOrigin).protocol !== 'https:') targetOrigin = '*'; } catch (e) { targetOrigin = '*'; }
       const statusEl = document.getElementById('status');
       const startBtn = document.getElementById('startBtn');
@@ -69,6 +70,7 @@
           const url = new URL(returnUrl);
           if(url.protocol !== 'https:' || url.hostname !== 'script.google.com') return '';
           url.searchParams.set('scan', code);
+          url.searchParams.set('scanPage', returnPage);
           return url.toString();
         }catch(e){return '';}
       }
@@ -76,13 +78,14 @@
       async function finishScan(decodedText){
         if(completed) return;
         completed = true;
-        const code = String(decodedText || '').trim();
+        // QR payloads may contain line breaks/spaces from legacy print sources; normalize before returning.
+        const code = String(decodedText || '').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '').trim();
         if(!code){completed=false;return;}
         status('อ่านรหัสได้แล้ว กำลังส่งกลับไปยังระบบคะแนน...', 'ok');
         startBtn.disabled = true;
         try{if(scanner && started){await scanner.stop();started=false;}}catch(e){}
         stopBtn.disabled = true;
-        const payload = {type:'MATH_SCORE_QR_SCAN', code:code, nonce:nonce};
+        const payload = {type:'MATH_SCORE_QR_SCAN', code:code, nonce:nonce, page:returnPage};
         let sentToOpener = false;
         try{
           if(window.opener && !window.opener.closed && returnUrl && nonce){
