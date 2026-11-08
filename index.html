@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#6658a6">
-  <title>Math Score Scanner | เครื่องสแกน QR</title>
+  <meta name="theme-color" content="#bd3947">
+  <title>สแกน QR นักเรียน | โรงเรียนสังวาลย์วิท ๕</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    :root{--purple:#6658a6;--purple2:#51458f;--ink:#2d2a42;--muted:#77748b;--line:#e9e6f1;--bg:#f7f6fb;--green:#287a54;--red:#a13b55}
+    :root{--purple:#bd3947;--purple2:#922d39;--ink:#39272c;--muted:#806b70;--line:#f0d9dc;--bg:#fff8f8;--green:#207a51;--red:#a13b55}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Prompt,Tahoma,sans-serif}
-    .wrap{max-width:620px;margin:0 auto;padding:18px 14px 38px}.hero{background:linear-gradient(120deg,#51458f,#8174c3 68%,#a18ac5);border-radius:24px;padding:22px;color:white;box-shadow:0 10px 28px #30265a12}
-    h1{font-size:23px;margin:0 0 6px}.hero p{margin:0;color:#f0edff;font-size:13px;line-height:1.7}.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 8px 24px #30265a0c}
+    .wrap{max-width:620px;margin:0 auto;padding:18px 14px 38px}.hero{background:linear-gradient(120deg,#a82f3d,#d65a67 68%,#ef9aa2);border-radius:24px;padding:22px;color:white;box-shadow:0 10px 28px #a82f3d12}
+    h1{font-size:23px;margin:0 0 6px}.hero p{margin:0;color:#f0edff;font-size:13px;line-height:1.7}.card{background:white;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 8px 24px #a82f3d0c}
     h2{font-size:17px;margin:0 0 6px}.muted{font-size:13px;line-height:1.7;color:var(--muted)}#reader{width:100%;max-width:520px;margin:14px auto 8px;overflow:hidden;border-radius:14px;background:#171523;min-height:220px}#reader video{object-fit:cover}
     .btn{border:0;border-radius:12px;padding:13px 16px;min-height:48px;font:500 15px Prompt,Tahoma,sans-serif;width:100%;cursor:pointer}.primary{background:var(--purple);color:white}.stop{background:#fff0f2;color:var(--red);margin-top:9px}
-    .status{padding:12px 14px;background:#f4f1ff;color:#5a508e;border-radius:12px;margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.status.ok{background:#eaf8f2;color:var(--green)}.status.error{background:#fff0f2;color:var(--red)}
-    .frame{width:72%;max-width:280px;aspect-ratio:1;border:2px dashed #a89fd2;border-radius:18px;margin:12px auto 4px;display:grid;place-items:center;color:#8982aa;font-size:13px;text-align:center;padding:18px;pointer-events:none}
-    .actions{display:grid;gap:9px}.small{font-size:11px;color:#908ba1;line-height:1.7;margin-top:12px}.backlink{display:none;margin-top:12px;text-align:center}.backlink a{color:var(--purple);font-weight:500}
+    .status{padding:12px 14px;background:#fff0f2;color:#88333d;border-radius:12px;margin-top:12px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.status.ok{background:#eaf8f1;color:var(--green)}.status.error{background:#fff0f2;color:var(--red)}
+    .frame{width:72%;max-width:280px;aspect-ratio:1;border:2px dashed #dfaab0;border-radius:18px;margin:12px auto 4px;display:grid;place-items:center;color:#987d83;font-size:13px;text-align:center;padding:18px;pointer-events:none}
+    .actions{display:grid;gap:9px}.small{font-size:11px;color:#908ba1;line-height:1.7;margin-top:12px}.backlink{display:none;margin-top:12px;text-align:center}.backlink a{color:var(--purple);font-weight:600}
     @media(min-width:520px){.wrap{padding-top:28px}.hero{padding:28px}}
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="hero"><h1>Math Score Scanner</h1><p>เครื่องสแกน QR นักเรียนแบบเรียลไทม์<br>เมื่ออ่านรหัสได้ ระบบจะส่งกลับไปยังหน้าบันทึกคะแนน</p></header>
+    <header class="hero"><h1>สแกน QR Code นักเรียน</h1><p>โรงเรียนสังวาลย์วิท ๕<br>เมื่ออ่านรหัสได้ ระบบจะส่งกลับไปยังหน้าบันทึกคะแนนโดยอัตโนมัติ</p></header>
     <section class="card">
       <h2>สแกนบัตรประจำตัวนักเรียน</h2>
       <p class="muted">กดปุ่มเริ่มใช้งาน แล้วอนุญาตให้เว็บไซต์ใช้กล้อง เล็งกล้องหลังไปที่ QR Code ให้อยู่ในกรอบ</p>
